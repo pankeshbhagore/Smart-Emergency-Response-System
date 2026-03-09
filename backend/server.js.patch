@@ -1,0 +1,4 @@
+app.use("/api/alerts",          require("./routes/alertRoutes"));
+app.use("/api/chat-sessions",   require("./routes/chatSessionRoutes"));
+app.use("/api/multi-agency",    require("./routes/multiAgencyRoutes"));
+app.use("/api/nearby",          require("./routes/nearbyRoutes"));
