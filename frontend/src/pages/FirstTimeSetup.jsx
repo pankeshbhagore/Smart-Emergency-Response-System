@@ -10,7 +10,7 @@
 import { useState } from "react";
 import api from "../services/api";
 
-const SEED_KEY = "SmartCity@AdminSeed2024"; // must match backend ADMIN_SEED_KEY
+// Seed key is set in backend .env as ADMIN_SEED_KEY // must match backend ADMIN_SEED_KEY
 
 export default function FirstTimeSetup({ onSetupComplete }) {
   const [step,    setStep]    = useState(1); // 1=intro, 2=form, 3=done
@@ -19,7 +19,7 @@ export default function FirstTimeSetup({ onSetupComplete }) {
     email: "admin@smartcity.gov",
     password: "",
     confirm: "",
-    seedKey: SEED_KEY,
+    seedKey: "",
   });
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState("");

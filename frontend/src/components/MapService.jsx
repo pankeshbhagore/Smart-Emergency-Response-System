@@ -27,7 +27,8 @@ L.Icon.Default.mergeOptions({
 });
 
 /* ── Constants ───────────────────────────────────────── */
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";   // absolute — works in both dev and prod
+const _BASE = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = _BASE.endsWith("/api") ? _BASE : `${_BASE}/api`;
 
 const TILES = {
   street: { url:"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",                          label:"🗺 Street" },

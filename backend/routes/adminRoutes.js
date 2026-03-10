@@ -21,7 +21,11 @@ router.delete("/users/:id",              ...isAdmin, ctrl.deleteUser);
 // Platform stats
 router.get   ("/stats",                  ...isAdmin, ctrl.getPlatformStats);
 
+// Public: check if any admin exists (used by frontend for first-time setup detection)
+router.get   ("/check",                  ctrl.checkAdmin);
+
 // One-time seed (public — protected by seedKey in body)
+// Admin can only be created ONCE — if admin exists, returns 400
 router.post  ("/seed",                   ctrl.seedAdmin);
 
 module.exports = router;

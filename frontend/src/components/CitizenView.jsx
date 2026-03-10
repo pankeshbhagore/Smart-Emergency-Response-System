@@ -702,14 +702,33 @@ export default function CitizenView({ weather, onReload, weatherLoading }) {
   };
 
   const geoReport = async type => {
-    if (!navigator.geolocation) { setReportError("Geolocation not supported on this device"); return; }
+    if (!navigator.geolocation) {
+      setReportError("⚠️ Location access not available. Please allow location permission in browser settings.");
+      return;
+    }
+    // HTTPS required for geolocation in production — check
+    if (location.protocol !== "https:" && location.hostname !== "localhost") {
+      setReportError("⚠️ Location requires HTTPS. Reporting with city centre coordinates.");
+      await doReport(type, defaultCenter[0], defaultCenter[1]).then(()=>setTab("track")).catch(()=>{});
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
-      async p=>{
-        try { await doReport(type, p.coords.latitude, p.coords.longitude); setTab("track"); }
-        catch(e){}
+      async p => {
+        try {
+          await doReport(type, p.coords.latitude, p.coords.longitude);
+          setTab("track");
+        } catch(e) {}
       },
-      ()=>doReport(type, defaultCenter[0], defaultCenter[1]).then(()=>setTab("track")).catch(()=>{}),
-      { enableHighAccuracy:true, timeout:10000 }
+      err => {
+        // Permission denied or timeout — use city centre as fallback
+        const msg = err.code === 1
+          ? "Location permission denied. Reporting with approximate location."
+          : "Could not get your location. Reporting with approximate location.";
+        setReportError(msg);
+        doReport(type, defaultCenter[0], defaultCenter[1])
+          .then(() => setTab("track")).catch(() => {});
+      },
+      { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 }
     );
   };
 

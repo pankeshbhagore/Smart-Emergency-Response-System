@@ -271,3 +271,15 @@ exports.seedAdmin = async (req, res) => {
     res.status(500).json({ error:"Failed to create admin" });
   }
 };
+
+// ── GET /admin/check ─────────────────────────────────────
+// Public endpoint: returns whether any Admin account exists
+// Used by frontend to decide: show login OR show first-time setup
+exports.checkAdmin = async (req, res) => {
+  try {
+    const adminExists = !!(await User.findOne({ role: "Admin" }).lean());
+    res.json({ adminExists });
+  } catch(err) {
+    res.status(500).json({ adminExists: false });
+  }
+};

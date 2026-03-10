@@ -87,7 +87,6 @@ function makeEmState(em) {
       ? { lat: em.vehicle.currentLat, lng: em.vehicle.currentLng, speedKmh: 0 }
       : null,
     vehicleHeading:0,
-    eta:           isOnScene ? 0 : null,  // seconds
     distRemaining: null,
     liveSpeed:     0,
     nextSignal:    null,

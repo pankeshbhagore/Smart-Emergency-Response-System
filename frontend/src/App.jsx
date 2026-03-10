@@ -40,50 +40,16 @@ export default function App() {
   };
 
   // ── Check if first-time setup needed ─────────────────────────
-  // We call /admin/stats anonymously — if it returns 0 admins, show setup page.
-  // (stats endpoint requires auth so we use a lightweight check endpoint)
+  // Calls GET /api/admin/check (public) which returns { adminExists: bool }
   useEffect(() => {
-    if (auth.token) { setSetupChecked(true); return; } // already logged in, skip
+    if (auth.token) { setSetupChecked(true); return; }
     (async () => {
       try {
-        // Use the seed endpoint to check: if admin exists it'll say so
-        // Instead, use a public "system-status" concept via seed (POST with bad key returns
-        // "Admin already exists" 400 vs "Invalid seed key" 403)
-        const r = await api.post("/admin/seed", {
-          name:"x", email:"x@x.com", password:"xxxxxxxx", seedKey:"__CHECK__"
-        });
-        // 201 = created (shouldn't happen), treat as no-admin-exists
-        setNeedsSetup(true);
+        const r = await api.get("/admin/check");
+        setNeedsSetup(!r.data.adminExists);
       } catch(err) {
-        const msg  = err.response?.data?.message || "";
-        const code = err.response?.status;
-        if (code === 400 && msg.includes("already exists")) {
-          // Admin exists → normal login
-          setNeedsSetup(false);
-        } else if (code === 403) {
-          // Got "Invalid seed key" → seed endpoint reachable but no admin yet (or bad key)
-          // We try with the real key to distinguish
-          try {
-            await api.post("/admin/seed", {
-              name:"x", email:"x@x.com", password:"xxxxxxxx",
-              seedKey:"SmartCity@AdminSeed2024"
-            });
-            setNeedsSetup(true); // would have created one if name/email/pass valid
-          } catch(e2) {
-            const m2 = e2.response?.data?.message || "";
-            const c2 = e2.response?.status;
-            if (c2 === 400 && m2.includes("already exists")) {
-              setNeedsSetup(false);
-            } else if (c2 === 400 && (m2.includes("required") || m2.includes("valid"))) {
-              // Seed key accepted but bad test data → no admin yet
-              setNeedsSetup(true);
-            } else {
-              setNeedsSetup(false); // default to normal login
-            }
-          }
-        } else {
-          setNeedsSetup(false);
-        }
+        // If endpoint unreachable, default to login (don't block app)
+        setNeedsSetup(false);
       } finally {
         setSetupChecked(true);
       }

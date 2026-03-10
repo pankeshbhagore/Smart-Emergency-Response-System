@@ -1,33 +1,50 @@
 require("dotenv").config();
-const express  = require("express");
-const cors     = require("cors");
-const http     = require("http");
+const express    = require("express");
+const cors       = require("cors");
+const http       = require("http");
 const { Server } = require("socket.io");
-const connectDB = require("./config/db");
+const connectDB  = require("./config/db");
 
-require("dotenv").config();
+// ← YEH LINE ADD KARO
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 
 connectDB();
 
 const app    = express();
 const server = http.createServer(app);
 
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+// ── CORS: allow all Vercel deployments + localhost ───────────
+const ALLOWED_ORIGINS = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean)
+  .concat(["http://localhost:5173", "http://localhost:3000"]);
+
+const corsOriginFn = (origin, cb) => {
+  // Allow requests with no origin (mobile apps, curl, Render health checks)
+  if (!origin) return cb(null, true);
+  // Allow any vercel.app subdomain
+  if (/\.vercel\.app$/.test(origin)) return cb(null, true);
+  // Allow explicitly listed origins
+  if (ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+  cb(new Error("CORS: " + origin + " not allowed"));
+};
 
 const io = new Server(server, {
   cors: {
-    origin:  [FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"],
+    origin: corsOriginFn,
     methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
     credentials: true,
   },
   pingTimeout:  60000,
   pingInterval: 25000,
+  transports:   ["websocket","polling"],
 });
 
 app.set("io", io);
 
 app.use(cors({
-  origin: [FRONTEND_URL, "http://localhost:5173", "http://localhost:3000"],
+  origin: corsOriginFn,
   credentials: true,
   methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
   allowedHeaders: ["Content-Type","Authorization"],
